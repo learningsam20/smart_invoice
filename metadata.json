@@ -1,0 +1,6 @@
+{
+  "name": "Smart Receipt Ledger",
+  "description": "Automatically structure receipts and vendor invoices into a running digital ledger with Gemini-powered OCR and Supabase storage.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
