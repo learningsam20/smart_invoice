@@ -2,6 +2,7 @@ import React, { useState, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Upload, FileText, Clipboard, Sparkles, Check, AlertCircle, FileImage, RefreshCw } from "lucide-react";
 import { Invoice } from "../types";
+import { api } from "../lib/api";
 
 interface InvoiceUploadProps {
   userId: string;
@@ -118,22 +119,12 @@ export default function InvoiceUpload({ userId, onInvoiceParsed }: InvoiceUpload
         };
       }
 
-      const response = await fetch("/api/invoices/parse", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userId,
-          fileData: filePayload,
-          fileName: activeTab === "file" ? fileName : "Raw Text Entry",
-          rawText: activeTab === "paste" ? pasteText : ""
-        })
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to process receipt details");
-      }
+      const data = await api.parseInvoice(
+        userId,
+        filePayload,
+        activeTab === "file" ? fileName : "Raw Text Entry",
+        activeTab === "paste" ? pasteText : ""
+      );
 
       setSuccess(true);
       onInvoiceParsed(data);

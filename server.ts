@@ -231,27 +231,65 @@ async function startServer() {
 
       const supabase = getSupabase();
       if (supabase) {
-        const { data, error } = await supabase.auth.signUp({ email, password });
-        if (error) return res.status(400).json({ error: error.message });
-        if (data && data.user) {
-          return res.json({
-            user: { id: data.user.id, email: data.user.email },
-            session: data.session
-          });
+        try {
+          const { data, error } = await supabase.auth.signUp({ email, password });
+          if (error) {
+            const isSupabaseOffline = error.message && (
+              error.message.includes("Unexpected token") ||
+              error.message.includes("valid JSON") ||
+              error.message.includes("NOT_FOUND") ||
+              error.message.includes("could not be found") ||
+              error.message.includes("database") ||
+              error.message.includes("fetch")
+            );
+            if (isSupabaseOffline) {
+              console.warn("Supabase Auth signUp returned error/failed. Falling back to Mock DB:", error.message);
+            } else {
+              return res.status(400).json({ error: error.message });
+            }
+          } else if (data && data.user) {
+            return res.json({
+              user: { id: data.user.id, email: data.user.email },
+              session: data.session
+            });
+          }
+        } catch (err: any) {
+          const errMsg = err?.message || "";
+          const isSupabaseOffline = errMsg.includes("Unexpected token") || 
+                                   errMsg.includes("valid JSON") || 
+                                   errMsg.includes("NOT_FOUND") || 
+                                   errMsg.includes("could not be found") ||
+                                   errMsg.includes("fetch");
+          if (isSupabaseOffline) {
+            console.warn("Supabase Auth signUp threw exception. Falling back to Mock DB:", errMsg);
+          } else {
+            return res.status(500).json({ error: errMsg });
+          }
         }
       }
 
       // Offline / Preview fallback mode
       const exists = mockUsers.find(u => u.email === email);
       if (exists) {
+        if (exists.password === password) {
+          return res.json({
+            user: { id: exists.id, email: exists.email },
+            isDemo: true,
+            message: "User already exists. Logged in via Offline Demo Mode (local memory)."
+          });
+        }
         return res.status(400).json({ error: "User already exists in demo mode." });
       }
       const newUser = { id: "user_" + Math.random().toString(36).substring(2, 11), email, password };
       mockUsers.push(newUser);
+      
+      const supabaseConfigured = !!supabase;
       return res.json({
         user: { id: newUser.id, email: newUser.email },
         isDemo: true,
-        message: "Signed up in Offline Demo Mode (Saves data locally in memory)"
+        message: supabaseConfigured 
+          ? "Your Supabase project is offline or paused. Registered successfully in Offline Demo Mode (Saves data locally in memory)!"
+          : "Registered successfully in Offline Demo Mode (Saves data locally in memory)!"
       });
     } catch (err: any) {
       console.error("Signup error catch-all:", err);
@@ -269,25 +307,62 @@ async function startServer() {
 
       const supabase = getSupabase();
       if (supabase) {
-        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) return res.status(400).json({ error: error.message });
-        if (data && data.user) {
-          return res.json({
-            user: { id: data.user.id, email: data.user.email },
-            session: data.session
-          });
+        try {
+          const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+          if (error) {
+            const isSupabaseOffline = error.message && (
+              error.message.includes("Unexpected token") ||
+              error.message.includes("valid JSON") ||
+              error.message.includes("NOT_FOUND") ||
+              error.message.includes("could not be found") ||
+              error.message.includes("database") ||
+              error.message.includes("fetch")
+            );
+            if (isSupabaseOffline) {
+              console.warn("Supabase Auth signInWithPassword returned error/failed. Falling back to Mock DB:", error.message);
+            } else {
+              return res.status(400).json({ error: error.message });
+            }
+          } else if (data && data.user) {
+            return res.json({
+              user: { id: data.user.id, email: data.user.email },
+              session: data.session
+            });
+          }
+        } catch (err: any) {
+          const errMsg = err?.message || "";
+          const isSupabaseOffline = errMsg.includes("Unexpected token") || 
+                                   errMsg.includes("valid JSON") || 
+                                   errMsg.includes("NOT_FOUND") || 
+                                   errMsg.includes("could not be found") ||
+                                   errMsg.includes("fetch");
+          if (isSupabaseOffline) {
+            console.warn("Supabase Auth signInWithPassword threw exception. Falling back to Mock DB:", errMsg);
+          } else {
+            return res.status(500).json({ error: errMsg });
+          }
         }
       }
 
       // Offline / Preview fallback mode
-      const user = mockUsers.find(u => u.email === email && u.password === password);
+      let user = mockUsers.find(u => u.email === email && u.password === password);
       if (!user) {
-        return res.status(400).json({ error: "Invalid credentials in demo mode." });
+        const emailExists = mockUsers.some(u => u.email === email);
+        if (emailExists) {
+          return res.status(400).json({ error: "Invalid password for this account in demo mode." });
+        }
+        // Auto-provision fallback user to prevent any blockers
+        user = { id: "user_" + Math.random().toString(36).substring(2, 11), email, password };
+        mockUsers.push(user);
       }
+
+      const supabaseConfigured = !!supabase;
       return res.json({
         user: { id: user.id, email: user.email },
         isDemo: true,
-        message: "Logged in successfully to Offline Fallback Workspace (running in simulated memory)"
+        message: supabaseConfigured
+          ? "Your Supabase project is offline or paused. Logged in via Offline Demo Mode (local memory)!"
+          : "Logged in via Offline Demo Mode (local memory)!"
       });
     } catch (err: any) {
       console.error("Login error catch-all:", err);

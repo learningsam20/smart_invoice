@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { motion } from "motion/react";
 import { Mail, Lock, LogIn, UserPlus, AlertCircle, Sparkles, BookOpen } from "lucide-react";
 import { AppConfig } from "../types";
+import { api } from "../lib/api";
 
 interface AuthCardProps {
   onAuthSuccess: (user: { id: string; email: string }) => void;
@@ -28,25 +29,9 @@ export default function AuthCard({ onAuthSuccess, config }: AuthCardProps) {
     setInfoMessage(null);
 
     try {
-      const endpoint = isLogin ? "/api/auth/login" : "/api/auth/signup";
-      const response = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-
-      const text = await response.text();
-      let data: any = null;
-      try {
-        data = JSON.parse(text);
-      } catch (err) {
-        // Output friendly string of HTML response or fallback
-        throw new Error(text.substring(0, 100) || "Server returned non-JSON response.");
-      }
-
-      if (!response.ok) {
-        throw new Error(data.error || "Authentication failed");
-      }
+      const data = isLogin 
+        ? await api.logIn(email, password)
+        : await api.signUp(email, password);
 
       if (data.message) {
         setInfoMessage(data.message);

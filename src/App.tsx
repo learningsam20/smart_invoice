@@ -15,6 +15,7 @@ import AuthCard from "./components/AuthCard";
 import InvoiceUpload from "./components/InvoiceUpload";
 import InvoiceTable from "./components/InvoiceTable";
 import DashboardStats from "./components/DashboardStats";
+import { api } from "./lib/api";
 
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
@@ -27,8 +28,7 @@ export default function App() {
   // 1. Fetch backend configuration status
   const fetchConfig = async () => {
     try {
-      const res = await fetch("/api/config");
-      const data = await res.json();
+      const data = await api.fetchConfig();
       setConfig(data);
     } catch (err) {
       console.error("Failed to fetch server config:", err);
@@ -39,15 +39,8 @@ export default function App() {
   const fetchInvoices = async (userId: string) => {
     setRefreshing(true);
     try {
-      const res = await fetch("/api/invoices", {
-        headers: {
-          "x-user-id": userId
-        }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setInvoices(data);
-      }
+      const data = await api.fetchInvoices(userId);
+      setInvoices(data);
     } catch (err) {
       console.error("Failed to load invoice history:", err);
     } finally {
@@ -66,7 +59,8 @@ export default function App() {
         try {
           const parsed = JSON.parse(savedUser);
           setUser(parsed);
-          await fetchInvoices(parsed.id);
+          const data = await api.fetchInvoices(parsed.id);
+          setInvoices(data);
         } catch {
           localStorage.removeItem("smart_ledger_user");
         }
@@ -105,15 +99,7 @@ export default function App() {
     setInvoices(prev => prev.filter(inv => inv.id !== id));
 
     try {
-      const res = await fetch(`/api/invoices/${id}`, {
-        method: "DELETE",
-        headers: {
-          "x-user-id": user.id
-        }
-      });
-      if (!res.ok) {
-        throw new Error("Failed to prune invoice.");
-      }
+      await api.deleteInvoice(id, user.id);
     } catch (err) {
       console.error("Error deleting transaction row:", err);
       // Revert optimistic update
