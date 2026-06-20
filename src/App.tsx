@@ -302,7 +302,7 @@ NOTIFY pgrst, 'reload schema';`}</pre>
       {/* 3. Footer Copyright Credits */}
       <footer className="bg-white border-t border-slate-150 py-6 mt-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-xs text-slate-400 leading-relaxed font-sans">
-          <p>© 2026 LedgerAI. Built with Gemini OCR and Supabase.</p>
+          <p>© 2026 Smart Receipt Ledger. Built with Gemini OCR and Supabase.</p>
         </div>
       </footer>
     </div>

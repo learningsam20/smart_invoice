@@ -12,9 +12,9 @@ let supabaseClient: any = null;
 if (supabaseUrl && supabaseAnonKey) {
   try {
     supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
-    console.info("LedgerAI: Client-side Supabase connection initialized successfully.");
+    console.info("Smart Receipt Ledger: Client-side Supabase connection initialized successfully.");
   } catch (err) {
-    console.error("LedgerAI: Failed to initialize client-side Supabase:", err);
+    console.error("Smart Receipt Ledger: Failed to initialize client-side Supabase:", err);
   }
 }
 
@@ -63,7 +63,7 @@ function saveLocalInvoices(userId: string, list: Invoice[]) {
 }
 
 /**
- * Unified API Client for LedgerAI.
+ * Unified API Client for Smart Receipt Ledger.
  * Seamlessly handles Serverless CDNs (like Vercel) by redirecting calls to
  * client-side local storages or direct client-side Supabase integrations.
  */

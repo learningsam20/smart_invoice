@@ -63,7 +63,7 @@ export default function AuthCard({ onAuthSuccess, config }: AuthCardProps) {
           <div className="bg-white/10 p-2.5 rounded-2xl backdrop-blur-md mb-3 border border-white/10">
             <Sparkles className="w-6 h-6 text-indigo-200" />
           </div>
-          <h2 className="font-sans font-bold tracking-tight text-2xl">LedgerAI Workspace</h2>
+          <h2 className="font-sans font-bold tracking-tight text-2xl">Smart Receipt Ledger</h2>
           <p className="text-indigo-200 text-xs mt-1.5 max-w-xs leading-relaxed">
             Let AI automatically extract details, assign categories, and update your ledgers.
           </p>

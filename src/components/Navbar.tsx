@@ -21,12 +21,12 @@ export default function Navbar({ user, config, onLogout }: NavbarProps) {
           {/* Logo & Brand matching LedgeAI sleek look */}
           <div className="flex items-center space-x-3">
             <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">
-              L
+              S
             </div>
             <div>
               <div className="flex items-center space-x-1.5 font-sans">
-                <span className="text-lg font-bold tracking-tight text-slate-800">LedgerAI</span>
-                <span className="text-xs bg-indigo-50 px-2 py-0.5 rounded text-indigo-600 font-medium font-sans">Smart Ledger</span>
+                <span className="text-lg font-bold tracking-tight text-slate-800">Smart Receipt Ledger</span>
+                <span className="text-xs bg-indigo-50 px-2 py-0.5 rounded text-indigo-600 font-medium font-sans">AI OCR</span>
               </div>
               <p className="text-[10px] font-mono text-slate-400">
                 Automated Ledger Assistant
@@ -70,7 +70,7 @@ export default function Navbar({ user, config, onLogout }: NavbarProps) {
                 }
               >
                 <div className={`w-1.5 h-1.5 rounded-full ${config.geminiConfigured ? "bg-indigo-500" : "bg-amber-500"}`}></div>
-                <span>{config.geminiConfigured ? "Gemini GPT-OCR" : "Gemini Off"}</span>
+                <span>{config.geminiConfigured ? "Gemini OCR" : "Gemini Off"}</span>
               </div>
             )}
 
