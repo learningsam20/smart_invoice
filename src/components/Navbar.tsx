@@ -24,12 +24,12 @@ export default function Navbar({ user, config, onLogout }: NavbarProps) {
               L
             </div>
             <div>
-              <div className="flex items-center space-x-1.5">
-                <span className="text-lg font-bold tracking-tight text-slate-800">LedgeAI</span>
-                <span className="text-xs bg-slate-100 px-2 py-0.5 rounded text-slate-500 font-medium">Smart Ledger</span>
+              <div className="flex items-center space-x-1.5 font-sans">
+                <span className="text-lg font-bold tracking-tight text-slate-800">LedgerAI</span>
+                <span className="text-xs bg-indigo-50 px-2 py-0.5 rounded text-indigo-600 font-medium font-sans">Smart Ledger</span>
               </div>
               <p className="text-[10px] font-mono text-slate-400">
-                Neha&apos;s Bookkeeping Assistant
+                Automated Ledger Assistant
               </p>
             </div>
           </div>
@@ -77,7 +77,7 @@ export default function Navbar({ user, config, onLogout }: NavbarProps) {
             {user && (
               <div className="flex items-center space-x-3 pl-4 border-l border-slate-200">
                 <div className="text-right">
-                  <p className="text-[10px] text-slate-400 font-medium uppercase tracking-wider">Neha's Team</p>
+                  <p className="text-[10px] text-slate-400 font-medium uppercase tracking-wider">Finance Team</p>
                   <p className="text-sm font-semibold text-slate-700 max-w-[130px] truncate leading-tight">
                     {user.email}
                   </p>

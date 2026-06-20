@@ -223,11 +223,14 @@ async function startServer() {
 
   // Auth: Signup
   app.post("/api/auth/signup", async (req, res) => {
-    const { email, password } = req.body;
-    const supabase = getSupabase();
+    try {
+      const { email, password } = req.body || {};
+      if (!email || !password) {
+        return res.status(400).json({ error: "Email and password are required." });
+      }
 
-    if (supabase) {
-      try {
+      const supabase = getSupabase();
+      if (supabase) {
         const { data, error } = await supabase.auth.signUp({ email, password });
         if (error) return res.status(400).json({ error: error.message });
         if (data && data.user) {
@@ -236,32 +239,36 @@ async function startServer() {
             session: data.session
           });
         }
-      } catch (err: any) {
-        return res.status(500).json({ error: err.message });
       }
-    }
 
-    // Offline / Preview fallback mode
-    const exists = mockUsers.find(u => u.email === email);
-    if (exists) {
-      return res.status(400).json({ error: "User already exists in demo mode." });
+      // Offline / Preview fallback mode
+      const exists = mockUsers.find(u => u.email === email);
+      if (exists) {
+        return res.status(400).json({ error: "User already exists in demo mode." });
+      }
+      const newUser = { id: "user_" + Math.random().toString(36).substring(2, 11), email, password };
+      mockUsers.push(newUser);
+      return res.json({
+        user: { id: newUser.id, email: newUser.email },
+        isDemo: true,
+        message: "Signed up in Offline Demo Mode (Saves data locally in memory)"
+      });
+    } catch (err: any) {
+      console.error("Signup error catch-all:", err);
+      return res.status(500).json({ error: err.message || "An unexpected registration error occurred." });
     }
-    const newUser = { id: "user_" + Math.random().toString(36).substring(2, 11), email, password };
-    mockUsers.push(newUser);
-    return res.json({
-      user: { id: newUser.id, email: newUser.email },
-      isDemo: true,
-      message: "Signed up in Offline Demo Mode (Saves data locally in memory)"
-    });
   });
 
   // Auth: Login
   app.post("/api/auth/login", async (req, res) => {
-    const { email, password } = req.body;
-    const supabase = getSupabase();
+    try {
+      const { email, password } = req.body || {};
+      if (!email || !password) {
+        return res.status(400).json({ error: "Email and password are required." });
+      }
 
-    if (supabase) {
-      try {
+      const supabase = getSupabase();
+      if (supabase) {
         const { data, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) return res.status(400).json({ error: error.message });
         if (data && data.user) {
@@ -270,21 +277,22 @@ async function startServer() {
             session: data.session
           });
         }
-      } catch (err: any) {
-        return res.status(500).json({ error: err.message });
       }
-    }
 
-    // Offline / Preview fallback mode
-    const user = mockUsers.find(u => u.email === email && u.password === password);
-    if (!user) {
-      return res.status(400).json({ error: "Invalid email or password in Demo mode." });
+      // Offline / Preview fallback mode
+      const user = mockUsers.find(u => u.email === email && u.password === password);
+      if (!user) {
+        return res.status(400).json({ error: "Invalid credentials in demo mode." });
+      }
+      return res.json({
+        user: { id: user.id, email: user.email },
+        isDemo: true,
+        message: "Logged in successfully to Offline Fallback Workspace (running in simulated memory)"
+      });
+    } catch (err: any) {
+      console.error("Login error catch-all:", err);
+      return res.status(500).json({ error: err.message || "An unexpected login error occurred." });
     }
-    return res.json({
-      user: { id: user.id, email: user.email },
-      isDemo: true,
-      message: "Logged in via Offline Demo Mode"
-    });
   });
 
   // Parse Invoice Invoice OCR Endpoint
