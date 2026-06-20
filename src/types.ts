@@ -9,6 +9,10 @@ export interface Invoice {
   date: string;
   confidence_score: number;
   invoice_preview: string | null;
+  validated_by_user?: boolean;
+  validated_at?: string | null;
+  user_feedback?: string | null;
+  status?: string | null;
 }
 
 export interface User {

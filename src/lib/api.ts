@@ -382,5 +382,104 @@ export const api = {
       throw new Error(data?.error || "AI process receipt details returned error.");
     }
     return data;
+  },
+
+  /**
+   * Update validation status of a ledger invoice transaction
+   */
+  async updateInvoiceValidation(id: string, userId: string, validated: boolean, validatedAt: string | null): Promise<void> {
+    const status = validated ? "validated" : "pending";
+    if (isStaticVercelMode) {
+      if (supabaseClient) {
+        try {
+          const { error } = await supabaseClient
+            .from("invoices")
+            .update({ 
+              validated_by_user: validated, 
+              validated_at: validatedAt,
+              status
+            })
+            .eq("id", id)
+            .eq("user_id", userId);
+          if (error) throw error;
+        } catch (supabaseErr) {
+          console.warn("Direct Supabase update failed, falling back to LocalStorage:", supabaseErr);
+        }
+      }
+      
+      const list = getLocalInvoices(userId);
+      const updated = list.map((inv) =>
+        inv.id === id ? { ...inv, validated_by_user: validated, validated_at: validatedAt, status } : inv
+      );
+      saveLocalInvoices(userId, updated);
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/invoices/${id}/validate`, {
+        method: "PATCH",
+        headers: { 
+          "Content-Type": "application/json",
+          "x-user-id": userId 
+        },
+        body: JSON.stringify({ validated, validatedAt, status })
+      });
+      const { forceFallback } = await safeParseJson(res);
+      if (forceFallback) {
+        isStaticVercelMode = true;
+        await this.updateInvoiceValidation(id, userId, validated, validatedAt);
+      }
+    } catch (err) {
+      console.warn("api.updateInvoiceValidation error:", err);
+      isStaticVercelMode = true;
+      await this.updateInvoiceValidation(id, userId, validated, validatedAt);
+    }
+  },
+
+  /**
+   * Complete update of an invoice (saving user edits, feedback text, status)
+   */
+  async updateInvoice(id: string, userId: string, updatedFields: Partial<Invoice>): Promise<void> {
+    if (isStaticVercelMode) {
+      if (supabaseClient) {
+        try {
+          const { error } = await supabaseClient
+            .from("invoices")
+            .update(updatedFields)
+            .eq("id", id)
+            .eq("user_id", userId);
+          if (error) throw error;
+        } catch (supabaseErr) {
+          console.warn("Direct Supabase update failed, falling back to LocalStorage:", supabaseErr);
+        }
+      }
+      
+      const list = getLocalInvoices(userId);
+      const updated = list.map((inv) =>
+        inv.id === id ? { ...inv, ...updatedFields } : inv
+      );
+      saveLocalInvoices(userId, updated);
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/invoices/${id}`, {
+        method: "PATCH",
+        headers: { 
+          "Content-Type": "application/json",
+          "x-user-id": userId 
+        },
+        body: JSON.stringify(updatedFields)
+      });
+      const { forceFallback } = await safeParseJson(res);
+      if (forceFallback) {
+        isStaticVercelMode = true;
+        await this.updateInvoice(id, userId, updatedFields);
+      }
+    } catch (err) {
+      console.warn("api.updateInvoice error:", err);
+      isStaticVercelMode = true;
+      await this.updateInvoice(id, userId, updatedFields);
+    }
   }
 };

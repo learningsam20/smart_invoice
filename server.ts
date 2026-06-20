@@ -471,6 +471,84 @@ async function startServer() {
     return res.json(mockInvoices);
   });
 
+  // Update Invoice Validation Status
+  app.patch("/api/invoices/:id/validate", async (req, res) => {
+    const { id } = req.params;
+    const { validated, validatedAt, status } = req.body;
+    const userId = req.headers["x-user-id"] as string;
+    if (!userId) {
+      return res.status(400).json({ error: "x-user-id header is required." });
+    }
+
+    const supabase = getSupabase();
+    if (supabase) {
+      try {
+        const { error } = await supabase
+          .from("invoices")
+          .update({ 
+            validated_by_user: validated, 
+            validated_at: validatedAt,
+            status: status || (validated ? "validated" : "pending")
+          })
+          .eq("id", id);
+
+        if (error) {
+          console.error("Supabase update validation failure:", error.message);
+        } else {
+          return res.json({ success: true });
+        }
+      } catch (err: any) {
+        console.error("Supabase update validation error:", err);
+      }
+    }
+
+    const item = mockInvoices.find(inv => inv.id === id);
+    if (item) {
+      (item as any).validated_by_user = validated;
+      (item as any).validated_at = validatedAt;
+      (item as any).status = status || (validated ? "validated" : "pending");
+      return res.json({ success: true, message: "Updated local in-memory fallback invoice validation status." });
+    } else {
+      return res.status(404).json({ error: "Invoice not found in matching record cache." });
+    }
+  });
+
+  // Update General Invoice Attributes (Edits, Feedback, Status)
+  app.patch("/api/invoices/:id", async (req, res) => {
+    const { id } = req.params;
+    const fieldsToUpdate = req.body; // e.g. { vendor, amount, category, date, user_feedback, status, ... }
+    const userId = req.headers["x-user-id"] as string;
+    if (!userId) {
+      return res.status(400).json({ error: "x-user-id header is required." });
+    }
+
+    const supabase = getSupabase();
+    if (supabase) {
+      try {
+        const { error } = await supabase
+          .from("invoices")
+          .update(fieldsToUpdate)
+          .eq("id", id);
+
+        if (error) {
+          console.error("Supabase patch invoice failure:", error.message);
+        } else {
+          return res.json({ success: true });
+        }
+      } catch (err: any) {
+        console.error("Supabase patch invoice error:", err);
+      }
+    }
+
+    const item = mockInvoices.find(inv => inv.id === id);
+    if (item) {
+      Object.assign(item, fieldsToUpdate);
+      return res.json({ success: true, message: "Updated local in-memory fallback invoice attributes." });
+    } else {
+      return res.status(404).json({ error: "Invoice not found in matching record cache." });
+    }
+  });
+
   // Delete Invoice
   app.delete("/api/invoices/:id", async (req, res) => {
     const { id } = req.params;
