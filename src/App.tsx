@@ -106,7 +106,16 @@ export default function App() {
   };
 
   // Handle parsed invoice updates
-  const handleInvoiceParsed = (newInvoice: Invoice) => {
+  const handleInvoiceParsed = async (newInvoice: Invoice, replaceExistingId?: string | null) => {
+    if (replaceExistingId && user) {
+      // Optimistically remove duplicate from state list
+      setInvoices(prev => prev.filter(inv => inv.id !== replaceExistingId));
+      try {
+        await api.deleteInvoice(replaceExistingId, user.id);
+      } catch (err) {
+        console.error("Error removing old duplicate ledger item:", err);
+      }
+    }
     setInvoices(prev => [newInvoice, ...prev]);
   };
 
@@ -330,7 +339,11 @@ NOTIFY pgrst, 'reload schema';`}</pre>
                 <div className="lg:col-span-4 space-y-6">
                   {/* Upload document card */}
                   <div className="h-full">
-                    <InvoiceUpload userId={user.id} onInvoiceParsed={handleInvoiceParsed} />
+                    <InvoiceUpload 
+                      userId={user.id} 
+                      onInvoiceParsed={handleInvoiceParsed} 
+                      existingInvoices={invoices} 
+                    />
                   </div>
 
                   {/* Frequently Asked help widget */}
